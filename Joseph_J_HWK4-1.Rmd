@@ -1,0 +1,108 @@
+---
+title: "Joseph-J-hwk3-3"
+author: "Justin Joseph"
+date: "2023-03-15"
+header-includes:
+  - \usepackage{booktabs}
+output: 
+  bookdown::pdf_document2:
+    fig_caption: yes
+    toc: false
+---
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, ggplot2, dplyr, lubridate, stringr, readxl, data.table, gdata)
+library(tidyverse)
+library(scales)
+library(knitr)
+library(rdrobust)
+library(modelsummary)
+library(AER)
+library(fixest)
+library("modelsummary")
+library("kableExtra")
+```
+
+```{r, include=FALSE}
+load("Hwk4_workspace_4.Rdata")
+```
+
+### 1.
+```{r, warning=FALSE, echo=FALSE}
+Final.plan.plot
+```
+
+### 2.
+```{r, warning=FALSE, echo=FALSE}
+rating.years
+```
+
+### 3.
+```{r, warning=FALSE, echo=FALSE}
+benchmark_payment
+```
+
+### 4. 
+```{r, warning=FALSE, echo=FALSE, message=FALSE}
+Q4
+```
+
+### 5. 
+```{r, warning=FALSE, echo=FALSE}
+Q5
+```
+
+### 6. 
+```{r, warning=FALSE, echo=FALSE}
+summary(est1)
+summary(est2)
+summary(est3)
+summary(est4)
+```
+
+### 7. 
+```{r, warning=FALSE, echo=FALSE}
+summary(rd_1)
+summary(rd_2)
+summary(rd_3)
+summary(rd_4)
+summary(rd_5)
+```
+
+```{r, warning=FALSE, echo=FALSE}
+graph_7a <- rdplot(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0, h=0.1, 
+                   title = "RD Plot: h=0.1", x.label="Summary Score", 
+                   y.label="Market Share", masspoints="off")
+
+graph_7b <- rdplot(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0, h=0.12, 
+                   title = "RD Plot: h=0.12", x.label="Summary Score", 
+                   y.label="Market Share", masspoints="off")
+
+graph_7c <- rdplot(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0, h=0.13, 
+                   title = "RD Plot: h=0.13", x.label="Summary Score", 
+                   y.label="Market Share", masspoints="off")
+graph_7d <- rdplot(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0, h=0.14, 
+                   title = "RD Plot: h=0.14", x.label="Summary Score", 
+                   y.label="Market Share", masspoints="off")
+graph_7e <- rdplot(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0, h=0.15, 
+                   title = "RD Plot: h=0.15", x.label="Summary Score", 
+                   y.label="Market Share", masspoints="off")
+```
+As you increase the bandwidth it decreases sensitivity thats why it is optimial to have a more narrow bandwidth 
+
+### 8. 
+```{r, warning=FALSE, echo=FALSE}
+Q8
+```
+So we see here that a majority of the contracts are centered around 2.16 and 2.45 not very much data around our threshold of 2.5. 
+
+### 9. 
+```{r, warning=FALSE, echo=FALSE}
+Q9<-knitr::kable(df, caption = "Counts and proportion of plans with PartD equal to 'Yes'")
+Q9 %>% kable_styling(latex_options=c("hold_position"), full_width = TRUE, position="center")
+```
+
+Here we see there is a potential difference in plan charateristics above and below the threshold where plans above the star rating of 2.25 have a high proportion of partD compared to a smaller number of plans belowe 2.25. 
+
+### 10. 
+Overall, increasing star rating has a direct effect on increasing enrollment. Across all of over models we see an avergae coeffient to be around 600. thus for every increase in star rating there is about 600 individuals who are now enrolled 
