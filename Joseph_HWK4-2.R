@@ -3,10 +3,10 @@ pacman::p_load(tidyverse, ggplot2, dplyr, lubridate, stringr, readxl, data.table
 library(tidyverse)
 library(scales)
 library(knitr)
-install.packages("rdrobust")
 library(rdrobust)
 
-full.ma.data <- readRDS('data/output/full_ma_data.rds')
+
+#full.ma.data <- readRDS('data/output/full_ma_data.rds')
 ma.data <- readRDS('data/output/final_ma_data.rds')
 view(ma.data)
 #1. 
@@ -24,21 +24,31 @@ Final.plan.plot <- ma.data %>%
   stat_summary(fun.data=f, geom="boxplot")+
   labs( 
     x="Year", 
-    y="Number of Plans"
+    y="Number of Plans", 
+    title="Plan Counts by county from 2007-2015 "
   ) + scale_y_continuous(labels=comma) + 
   theme_bw()
 Final.plan.plot
+
+# Final.plan.plot1 <- ma.data %>%
+#   group_by (fips, year) %>%
+#   select(fips, year) %>% summarize (plan_count=n()) %>%
+#   ggplot(aes(x=as.factor(year), y=plan_count)) +
+#   geom_boxplot()
+# Final.plan.plot1
 
 #2 Provide bar graphs showing the distribution of star ratings in 2009, 2012, and 2015. How has this distribution changed over time?
 
 rating.years <- ma.data %>%
   filter(year==2009 | year==2012 | year==2015)%>%
+  filter(!is.na(Star_Rating))%>%
   ggplot(aes(x=as.factor(Star_Rating)))+
   geom_bar(aes(fill=as.factor(year)), position=position_dodge()) + 
   scale_fill_grey() + 
   labs(
     x="Star Rating",
     y="Count of Plans",
+    title="Distribution of star ratings in 2009, 2012, and 2015",
     fill="Year" 
   ) + 
   theme_bw() + 
@@ -78,6 +88,20 @@ Q4<-ma.data%>%
 Q4
 
 
+ma.mkt.data<- ma.data %>% group_by(fips,year)%>%
+  summarize(enroll=first(avg_enrolled), medicare=first(avg_eligibles), bench=mean(ma_rate, na.rm=1))%>%
+  mutate(mkt_share=enroll/medicare)
+ma.share<-ma.mkt.data %>% filter(year>=2009 & year<=2015) %>%
+  ggplot(aes(x=as.factor(year), y=mkt_share, group=1))+ 
+  stat_summary(fun.y="mean", geom = "bar", na.rm=TRUE)  +
+  labs(
+    x="Year",
+    y="Average Share of MA",
+    title="Average share of Medicare Advantage 
+    (relative to all Medicare eligibles) over time from 2009 through 2015"
+  ) + scale_y_continuous(labels=comma) + 
+  theme_bw()
+ma.share
 #Q5
 
 
@@ -102,12 +126,25 @@ ma.data.clean <- ma.data.clean %>%
          avg_eligibles, avg_enrolled, premium_partc, risk_ab, Star_Rating,
          bid, avg_ffscost, ma_rate, partd)
 colnames(ma.data.clean)
-ma.data.clean_q5<-ma.data.clean %>%
-  filter(Star_Rating >=3)
+
+ma.rounded<-ma.data.clean %>% 
+  mutate(rounded_30=ifelse(raw_rating>=2.75 & raw_rating<3.00 & Star_Rating==3,1,0),
+         rounded_35=ifelse(raw_rating>=3.25 & raw_rating<3.50 & Star_Rating==3.5,1,0),
+         rounded_40=ifelse(raw_rating>=3.75 & raw_rating<4.00 & Star_Rating==4,1,0),
+         rounded_45=ifelse(raw_rating>=4.25 & raw_rating<4.50 & Star_Rating==4.5,1, 0),
+         rounded_50=ifelse(raw_rating>=4.75 & raw_rating<5.00 & Star_Rating==5,1, 0)) %>%
+  group_by(Star_Rating)%>% filter(Star_Rating %in% c(3,3.5,4,4.5,5)) %>%
+  summarize(count_30=sum(rounded_30),
+            count_35=sum(rounded_35),
+            count_40=sum(rounded_40),
+            count_45=sum(rounded_45),
+            count_50=sum(rounded_50)) %>%
+  mutate(rounded=count_30+count_35+count_40+count_45+count_50)%>%
+  select(Star_Rating, rounded)
 
 
-Q5<- knitr::kable(table(ma.data.clean_q5$Star_Rating))
-Q5
+Q5<-ma.rounded
+
 
 
 #Q6
@@ -115,28 +152,62 @@ Q5
 
 
 
-ma.rd <- ma.data.clean %>%
-  mutate(score = raw_rating - 2.25,
-         treat = (score>=0),
-         window1 = (score>=-.175 & score<=.175),
-         window2 = (score>=-.125 & score<=.125),
-         mkt_share = avg_enrollment/avg_eligibles,
-         ln_share = log(mkt_share),
-         score_treat=score*treat)
+
+star30 <- lm(avg_enrollment ~ treat + score,
+             data=(ma.data.clean %>%
+                     filter(raw_rating>=(2.75-0.125),
+                            raw_rating <= (2.75+0.125), 
+                            Star_Rating %in% c(2.5,3)) %>%
+                     mutate(treat=(Star_Rating==3.0),
+                            score=raw_rating-2.75)))
+
+star35 <- lm(avg_enrollment ~ treat + score,
+             data=(ma.data.clean %>%
+                     filter(raw_rating>=(3.25-0.125),
+                            raw_rating <= (3.25+0.125), 
+                            Star_Rating %in% c(3,3.5)) %>%
+                     mutate(treat=(Star_Rating==3.5),
+                            score=raw_rating-3.25)))
+
+star40<-lm(avg_enrollment ~ treat + score,
+                data=(ma.data.clean %>%
+                        filter(raw_rating>=(3.75-0.125),
+                               raw_rating <= (3.75+0.125), 
+                               Star_Rating %in% c(3.5,4.0)) %>%
+                        mutate(treat=(Star_Rating==4.0),
+                               score=raw_rating-3.75)))
+star45<-lm(avg_enrollment ~ treat + score,
+           data=(ma.data.clean %>%
+                   filter(raw_rating>=(4.0-0.125),
+                          raw_rating <= (4.0+0.125), 
+                          Star_Rating %in% c(4.0,4.5)) %>%
+                   mutate(treat=(Star_Rating==4.5),
+                          score=raw_rating-4.25)))
+
+modelsummary(list("Star 3.0"=star30, "Star 3.5 "=star35, "Star 4.0"=star40, "Star 4.5"=star45), 
+             title="Estimates", 
+             coef_map=c('Treatment'="treatTrue",
+                        'score'="score"), 
+             gof_map=list(list("raw"="nobs","clean"="N", "fmt"=0),
+                          list("raw"="r.squared", "clean"="R\\textsuperscript{2}", "fmt"=2))) %>%
+  kable_styling(latex_options=c("hold_position"), full_width = TRUE, position="center")
 
 
-est1 <- rdrobust(y=ma.data.clean$avg_enrollment, x=ma.data.clean$score, c=0,
-                 h=0.125, p=1, kernel="uniform", vce="hc0",
-                 masspoints="off")
-est2 <- rdrobust(y=ma.data.clean$avg_enrollment, x=ma.data.clean$score, c=0.5,
-                 h=0.125, p=1, kernel="uniform", vce="hc0",
-                 masspoints="off")
-est3 <- rdrobust(y=ma.data.clean$avg_enrollment, x=ma.data.clean$score, c=1,
-                 h=0.125, p=1, kernel="uniform", vce="hc0",
-                 masspoints="off")
-est4 <- rdrobust(y=ma.data.clean$avg_enrollment, x=ma.data.clean$score, c=1.5,
-                 h=0.125, p=1, kernel="uniform", vce="hc0",
-                 masspoints="off")
+
+
+# est1 <- rdrobust(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0,
+#                  h=0.125, p=1, kernel="uniform", vce="hc0",
+#                  masspoints="off")
+# summary(est1)
+# est2 <- rdrobust(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0.5,
+#                  h=0.125, p=1, kernel="uniform", vce="hc0",
+#                  masspoints="off")
+# est3 <- rdrobust(y=ma.rd$avg_enrollment, x=ma.rd$score, c=1,
+#                  h=0.125, p=1, kernel="uniform", vce="hc0",
+#                  masspoints="off")
+# est4 <- rdrobust(y=ma.rd$avg_enrollment, x=ma.rd$score, c=1.5,
+#                  h=0.125, p=1, kernel="uniform", vce="hc0",
+#                  masspoints="off")
 
 
 #Q7 
@@ -173,24 +244,24 @@ est4 <- rdrobust(y=ma.data.clean$avg_enrollment, x=ma.data.clean$score, c=1.5,
 # h0.1_c0$coef[1]
 
 rd_1 <- rdrobust(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0,
-                  h=0.1, p=1, kernel="uniform", vce="hc0",
-                  masspoints="off")
+                 h=0.1, p=1, kernel="uniform", vce="hc0",
+                 masspoints="off")
 
 rd_2 <- rdrobust(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0,
-                  h=0.12, p=1, kernel="uniform", vce="hc0",
-                  masspoints="off")
+                 h=0.12, p=1, kernel="uniform", vce="hc0",
+                 masspoints="off")
 
 rd_3 <- rdrobust(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0,
-                  h=0.13, p=1, kernel="uniform", vce="hc0",
-                  masspoints="off")
+                 h=0.13, p=1, kernel="uniform", vce="hc0",
+                 masspoints="off")
 
 rd_4 <- rdrobust(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0,
-                  h=0.14, p=1, kernel="uniform", vce="hc0",
-                  masspoints="off")
+                 h=0.14, p=1, kernel="uniform", vce="hc0",
+                 masspoints="off")
 
 rd_5 <- rdrobust(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0,
-                  h=0.15, p=1, kernel="uniform", vce="hc0",
-                  masspoints="off")
+                 h=0.15, p=1, kernel="uniform", vce="hc0",
+                 masspoints="off")
 
 
 
@@ -242,8 +313,9 @@ Q9
 
 
 rm(list=c("ma.data", "ma.data.clean", "full.ma.data"))
-save.image("Hwk4_workspace_4.Rdata")
+save.image("Hwk4_workspace_4_2.Rdata")
 
 
 
 
+    
