@@ -3,7 +3,7 @@ pacman::p_load(tidyverse, ggplot2, dplyr, lubridate, stringr, readxl, data.table
 library(tidyverse)
 library(scales)
 library(knitr)
-install.packages("rdrobust")
+
 library(rdrobust)
 
 full.ma.data <- readRDS('data/output/full_ma_data.rds')

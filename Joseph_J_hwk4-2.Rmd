@@ -33,72 +33,61 @@ load("Hwk4_workspace_4_2.Rdata")
 ```{r, warning=FALSE, echo=FALSE}
 Final.plan.plot
 ```
+Since this data show the average number of plans by county for each year this is a good amout of plans. on average between 2011 -2015 the median number of plans range from 16-10 this is a sizeable number of different plans one can choose from thus provides enough diversity and competition in the market however anything below 5 could potentially be to little 
+\newpage
 
 ### 2.
 ```{r, warning=FALSE, echo=FALSE}
 rating.years
 ```
+The distrubtion of higher star rating plans increase as time goes on and there is a decrease in low star plans as time increases. 
+\newpage
 
 ### 3.
 ```{r, warning=FALSE, echo=FALSE}
 benchmark_payment
 ```
+The average benchmark payment between 2009 and 2015 showed no great changes over time where the average payment was around 800 dollars. 
+\newpage
 
 ### 4. 
 ```{r, warning=FALSE, echo=FALSE, message=FALSE}
 ma.share
 ```
+Medicare advantage has increase in popularity between 2009 to 2015 because the average share of enrollees in MA increase from .15 to a little under .22, this is a sizable increase in market pentration and thus shows increase in popularity.
+\newpage
 
 ### 5. 
 ```{r, warning=FALSE, echo=FALSE}
 Q5
 ```
+\newpage
 
 ### 6. 
 ```{r, warning=FALSE, echo=FALSE}
 modelsummary(list("Star 3.0"=star30, "Star 3.5 "=star35, "Star 4.0"=star40, "Star 4.5"=star45), 
              title="Estimates", 
-             coef_map=c('treatTrue'="Treatment",
-                        'score'="score"), 
+             coef_map=c('treatTRUE'="Treatment",
+                        'score'="Score"), 
              gof_map=list(list("raw"="nobs","clean"="N", "fmt"=0),
                           list("raw"="r.squared", "clean"="R\\textsuperscript{2}", "fmt"=2))) %>%
   kable_styling(latex_options=c("hold_position"), full_width = TRUE, position="center")
 
 ```
+\newpage
 
 ### 7. 
 ```{r, warning=FALSE, echo=FALSE}
-summary(rd_1)
-summary(rd_2)
-summary(rd_3)
-summary(rd_4)
-summary(rd_5)
+Q7
 ```
+\newpage
 
-```{r, warning=FALSE, echo=FALSE}
-graph_7a <- rdplot(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0, h=0.1, 
-                   title = "RD Plot: h=0.1", x.label="Summary Score", 
-                   y.label="Market Share", masspoints="off")
 
-graph_7b <- rdplot(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0, h=0.12, 
-                   title = "RD Plot: h=0.12", x.label="Summary Score", 
-                   y.label="Market Share", masspoints="off")
-
-graph_7c <- rdplot(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0, h=0.13, 
-                   title = "RD Plot: h=0.13", x.label="Summary Score", 
-                   y.label="Market Share", masspoints="off")
-graph_7d <- rdplot(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0, h=0.14, 
-                   title = "RD Plot: h=0.14", x.label="Summary Score", 
-                   y.label="Market Share", masspoints="off")
-graph_7e <- rdplot(y=ma.rd$avg_enrollment, x=ma.rd$score, c=0, h=0.15, 
-                   title = "RD Plot: h=0.15", x.label="Summary Score", 
-                   y.label="Market Share", masspoints="off")
-```
 As you increase the bandwidth it decreases sensitivity thats why it is optimial to have a more narrow bandwidth 
 
 ### 8. 
 ```{r, warning=FALSE, echo=FALSE}
-Q8
+Q81
 ```
 So we see here that a majority of the contracts are centered around 2.16 and 2.45 not very much data around our threshold of 2.5. 
 

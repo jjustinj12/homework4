@@ -1,0 +1,117 @@
+---
+title: "Joseph-J-hwk4-2"
+author: "Justin Joseph"
+date: "2023-04-05"
+header-includes:
+  - \usepackage{booktabs}
+output: 
+  bookdown::pdf_document2:
+    fig_caption: yes
+    toc: false
+---
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, ggplot2, dplyr, lubridate, stringr, readxl, data.table, gdata)
+library(tidyverse)
+library(scales)
+library(knitr)
+library(rdrobust)
+library(modelsummary)
+library(AER)
+library(fixest)
+library(cobalt)
+library("modelsummary")
+library("kableExtra")
+library(broom)
+library(rdd)
+
+```
+
+```{r, include=FALSE}
+load("Hwk4_workspace_4_3.Rdata")
+```
+
+
+### 1.
+```{r, fig.cap="distribution of plan counts by county over time", warning=FALSE, echo=FALSE}
+Q1
+```
+Since this data show the average number of plans by county for each year this is a good amout of plans. on average between 2011 -2015 the median number of plans range from 16-10 this is a sizeable number of different plans one can choose from thus provides enough diversity and competition in the market however anything below 5 could potentially be to little 
+\newpage
+
+### 2.
+```{r, fig.cap="distribution of star ratings in 2009, 2012, and 2015", warning=FALSE, echo=FALSE}
+Q2
+```
+The distribution of higher star rating plans increase as time goes on and there is a decrease in low star plans as time increases. 
+\newpage
+
+### 3.
+```{r, fig.cap="average benchmark payment over time from 2009 through 2015", warning=FALSE, echo=FALSE}
+Q3
+```
+The average benchmark payment between 2009 and 2015 showed no great changes over time where the average payment was around 800 dollars. 
+\newpage
+
+### 4. 
+```{r, fig.cap="Average share of Medicare Advantage (relative to all Medicare eligibles) over time from 2009 through 2015", warning=FALSE, echo=FALSE, message=FALSE}
+Q4
+```
+Medicare advantage has increase in popularity between 2009 to 2015 because the average share of enrolles in MA increase from .15 to a little under .22, this is a sizable increase in market penetration and thus shows increase in popularity. 
+\newpage
+
+### 5. 
+```{r, warning=FALSE, echo=FALSE}
+knitr::kable(Q5, col.names = c("Star Rating", "Number of plans"), caption = "Number of plans that are rounded up into a 3-star, 3.5-star, 4-star, and 4.5-star", booktabs = TRUE) %>% kable_styling(latex_options=c("hold_position"), full_width = TRUE, position="center")
+
+
+```
+\newpage
+
+### 6. 
+```{r, warning=FALSE, echo=FALSE}
+modelsummary(list("Star 3.0"=star30, "Star 3.5 "=star35, "Star 4.0"=star40), 
+             title="Estimates", 
+             coef_map=c('treatTRUE'="Treatment",
+                        'score'="Score"), 
+             gof_map=list(list("raw"="nobs","clean"="N", "fmt"=0),
+                          list("raw"="r.squared", "clean"="R\\textsuperscript{2}", "fmt"=2))) %>%
+  kable_styling(latex_options=c("hold_position"), full_width = TRUE, position="center")
+
+```
+Note: there were no raw ratings greater than 4.219
+\newpage
+
+### 7. 
+```{r, fig.cap="RD Estimates Across Different Bandwidths", warning=FALSE, echo=FALSE}
+Q7
+```
+As the bandwidth changes between .11-.15 one can see that the estimates specifically for 3.5 and 4 are more or less consistent however for a star rating of 3 we see the estimates slightly change; however the 95 % CI between every bandwidth are all within each other thus show no significant differences across each star rating in each bandwidth. 
+
+\newpage
+
+
+### 8. 
+```{r, warning=FALSE, echo=FALSE}
+Q8_1
+Q8_2
+Q8_3
+Q8_4
+```
+Based on these graphs above we see that the number of plans is not consistent above and below the threshold value and thus could potentially be manipulating the star rating since it is uneven. In addition, there is not much data around our threshold values as well. Ultimately, we don't see continuity in terms of the density of plans across our threshold values above and below. 
+
+\newpage
+
+### 9. 
+```{r, warning=FALSE, echo=FALSE}
+Q9_1
+Q9_2
+Q9_3
+```
+
+
+An assumption for RD is that groups above and below the threshold value should be similar. Here we see there is a potential difference in plan characteristics above and below the threshold is very small in term of both HMO and PartD plans They are all less than .1 mean difference which shows that the plan characteristics across HMO and PartD are similar above and below the star rating threshold. 
+
+### 10. 
+
+First, our estimates have very very small r^2 values which show a potential weak ability to effectively estimate the effect of star ratings on market share. For a low star rating such as 3.0 rounding up slightly increased market share however for higher star ratings it showed a slight decrease in market share. Even though we see plan characteristics in term of part D and HMO are similar above and below thresholds, contracts can potentially be manipulating the running variable since they are not consistent across star ratings. 

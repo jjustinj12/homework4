@@ -5,6 +5,10 @@ library(scales)
 library(knitr)
 library(rdrobust)
 library(cobalt)
+library(modelsummary)
+library(rdd)
+library(broom)
+
 
 
 #full.ma.data <- readRDS('data/output/full_ma_data.rds')
@@ -144,7 +148,7 @@ ma.rounded<-ma.data.clean %>%
 
 
 Q5<-ma.rounded
-
+Q5
 
 
 #Q6
@@ -152,8 +156,8 @@ Q5<-ma.rounded
 
 ma.data.clean <- ma.data.clean %>%
   mutate(
-         mkt_share = avg_enrollment/avg_eligibles,
-         ln_share = log(mkt_share))
+    mkt_share = avg_enrollment/avg_eligibles,
+    ln_share = log(mkt_share))
 
 
 
@@ -173,12 +177,12 @@ star35 <- lm(mkt_share ~ treat + score,
                             score=raw_rating-3.25)))
 
 star40<-lm(mkt_share ~ treat + score,
-                data=(ma.data.clean %>%
-                        filter(raw_rating>=(3.75-0.125),
-                               raw_rating <= (3.75+0.125), 
-                               Star_Rating %in% c(3.5,4.0)) %>%
-                        mutate(treat=(Star_Rating==4.0),
-                               score=raw_rating-3.75)))
+           data=(ma.data.clean %>%
+                   filter(raw_rating>=(3.75-0.125),
+                          raw_rating <= (3.75+0.125), 
+                          Star_Rating %in% c(3.5,4.0)) %>%
+                   mutate(treat=(Star_Rating==4.0),
+                          score=raw_rating-3.75)))
 star45<-lm(mkt_share ~ treat + score,
            data=(ma.data.clean %>%
                    filter(raw_rating>=(4.0-0.125),
@@ -187,7 +191,12 @@ star45<-lm(mkt_share ~ treat + score,
                    mutate(treat=(Star_Rating==4.5),
                           score=raw_rating-4.25)))
 
-
+modelsummary(list("Star 3.0"=star30, "Star 3.5 "=star35, "Star 4.0"=star40), 
+             title="Estimates", 
+             coef_map=c('treatTRUE'="Treatment",
+                        'score'="Score"), 
+             gof_map=list(list("raw"="nobs","clean"="N", "fmt"=0),
+                          list("raw"="r.squared", "clean"="R\\textsuperscript{2}", "fmt"=2))) 
 
 
 
@@ -238,7 +247,7 @@ for (h in seq(0.1, 0.15, 0.01)) {
 
 rd.estimates <- est.final %>% filter (term== "treatTRUE") %>%
   ggplot(aes(x=as.factor(bandwidth), y=estimate, shape=as.factor(rating)))+
-geom_hline(aes(yintercept=0), linetype="dashed") +
+  geom_hline(aes(yintercept=0), linetype="dashed") +
   geom_errorbar(aes(ymin=conf.low, ymax=conf.high),
                 lwd=1, width=0, position=position_dodge(width = 0.5))+
   labs(
@@ -251,78 +260,124 @@ Q7<-rd.estimates
 Q7
 
 #Q8
-# Q8<-ma.data.clean %>%
-#   filter(avg_enrollment<500) %>%
-#   filter(raw_rating>2 & raw_rating<2.5)%>%
-#   ggplot(aes(x=raw_rating, y=avg_enrollment))+geom_point()
-# Q8
 
+Q8_1 <- ma.data.clean %>%
+  filter(raw_rating>= (2.75-0.125),
+         raw_rating<= (2.75+0.125),
+         Star_Rating %in% c(2.5,3.0)) %>%
+  ggplot(aes(x=raw_rating))+
+  geom_density() + 
+  geom_vline(xintercept=2.75, linetype='dashed') +
+  labs(
+    x="Star Rating",
+    y = "Number of Plans",
+    title="Distrubtion of of Plans on Star Rating"
+  ) + scale_x_continuous(breaks=seq(2.6, 2.9, 0.05), limits=c(2.6, 2.9, 0.05))
 
-Q8 <- ggplot(ma.data.clean, aes(x = raw_rating)) +
-  geom_histogram(aes(y = ..density..), color = "black", fill = "gray", bins = 20) + 
-  geom_density(alpha = 0.5, color = "black") + 
-  labs(title = "Histogram of Raw Rating", x = "Value", y = "Density") + 
-  theme_minimal() 
+Q8_1
 
-Q8
-
-
-
-Q81 <- ma.data.clean %>%
+Q8_2 <- ma.data.clean %>%
   filter((raw_rating>=3.25-0.125 & Star_Rating==3) |
            raw_rating<=3.25+.125 & Star_Rating==3.5) %>%
   ggplot(aes(x=raw_rating))+
   geom_density() + 
   geom_vline(xintercept=3.25, linetype='dashed') +
   labs(
-    x="Running Variable",
-    y = "Number of Plans"
+    x="Star Rating",
+    y = "Number of Plans",
+    title="Distrubtion of of Plans on Star Rating"
   ) + scale_x_continuous(breaks=seq(3.10, 3.40, 0.05), limits=c(3.1, 3.40, 0.05))
-Q81
+Q8_2
 
+Q8_3 <- ma.data.clean %>%
+  filter((raw_rating>=3.75-0.125 & Star_Rating==3.5) |
+           raw_rating<=3.75+.125 & Star_Rating==4) %>%
+  ggplot(aes(x=raw_rating))+
+  geom_density() + 
+  geom_vline(xintercept=3.75, linetype='dashed') +
+  labs(
+    x="Star Rating",
+    y = "Number of Plans",
+    title="Distrubtion of of Plans on Star Rating"
+  ) + scale_x_continuous(breaks=seq(3.6, 3.9, 0.05), limits=c(3.6, 3.9, 0.05))
+Q8_3
 
-
+Q8_4 <- ma.data.clean %>%
+  filter((raw_rating>=4.25-0.125 & Star_Rating==4) |
+           raw_rating<=4.25+.125 & Star_Rating==4.5) %>%
+  ggplot(aes(x=raw_rating))+
+  geom_density() + 
+  geom_vline(xintercept=4.25, linetype='dashed') +
+  labs(
+    x="Star Rating",
+    y = "Number of Plans",
+    title="Distrubtion of of Plans on Star Rating"
+  ) + scale_x_continuous(breaks=seq(4.1, 4.4, 0.05), limits=c(4.1, 4.4, 0.05))
+Q8_4
 
 #Q9
-colnames(ma.data.clean)
 
+ma.data.clean <- ma.data.clean %>% mutate(HMO=str_detect(plan_type, "HMO"))
 
 lp.vars <- ma.data.clean %>% ungroup() %>%
   filter( (raw_rating >= 2.75-0.125 & Star_Rating== 2.5) |
             (raw_rating  <= 2.75+0.125 & Star_Rating == 3) ) %>%
   mutate(rounded = (Star_Rating == 3)) %>% 
-  select(plan_type, partd, rounded) %>%
-  filter(complete.cases(.))
-
-lp.covs <- lp.vars %>% select(plan_type, partd)
-
-plot.30 <- love.plot(bal.tab(lp.covs, treat= lp.vars$rounded), colors="black")+
-  theme_bw() + theme(legend.position="none")
-
-
-library(cobalt)
-
-
-lp.vars <- final.data.2009.new %>% ungroup() %>%
-  filter((raw_rating >= 3.25-0.125 & Star_Rating==3.5) |
-           (raw_rating <= 3.25+0.125 & Star_Rating==3)) %>%
-  mutate(rounded=(Star_Rating==3.5)) %>%
-  select(plan_type, partd, rounded) %>%
+  select(HMO, partd, rounded) %>%
   filter(complete.cases(.))
 
 lp.covs <- lp.vars %>% select(HMO, partd)
 
-plot.35 <- love.plot(bal.tab(lp.covs, treat=lp.vars$rounded), colors="black") + 
+plot.30 <- love.plot(bal.tab(lp.covs, treat= lp.vars$rounded), colors="black", title = "Compairson for 2.5 vs 3 stars (0.125 bandwidth)")+
   theme_bw() + theme(legend.position="none")
 
-plot.35
+Q9_1<-plot.30
+
+lp.vars <- ma.data.clean %>% ungroup() %>%
+  filter((raw_rating >= 3.25-0.125 & Star_Rating==3.0) |
+           (raw_rating <= 3.25+0.125 & Star_Rating==3.5)) %>%
+  mutate(rounded=(Star_Rating==3.5)) %>%
+  select(HMO, partd, rounded) %>%
+  filter(complete.cases(.))
+
+lp.covs <- lp.vars %>% select(HMO, partd)
+
+plot.35 <- love.plot(bal.tab(lp.covs, treat=lp.vars$rounded), colors="black", title =  "Compairson balance for 3 vs 3.5 stars (0.125 bandwidth)") + 
+  theme_bw() + theme(legend.position="none")
+
+Q9_2<-plot.35
+
+lp.vars <- ma.data.clean %>% ungroup() %>%
+  filter((raw_rating >= 3.75-0.125 & Star_Rating==3.5) |
+           (raw_rating <= 3.75+0.125 & Star_Rating==4.0)) %>%
+  mutate(rounded=(Star_Rating==4.0)) %>%
+  select(HMO, partd, rounded) %>%
+  filter(complete.cases(.))
+
+lp.covs <- lp.vars %>% select(HMO, partd)
+
+plot.4 <- love.plot(bal.tab(lp.covs, treat=lp.vars$rounded), colors="black",title =  "Compairson balance for 3.5 vs 4 stars (0.125 bandwidth)") + 
+  theme_bw() + theme(legend.position="none")
+
+Q9_3<-plot.4
+
+
+
+
+
+
+
+
+
+
+Q9_1
+
 
 
 
 rm(list=c("ma.data", "ma.data.clean", "full.ma.data"))
-save.image("Hwk4_workspace_4_2.Rdata")
+save.image("Hwk4_workspace_4_3.Rdata")
 
 
 
 
-    
